@@ -12,6 +12,7 @@ app.use(cors());
 app.use(express.json());
 
 const DATA_PATH = path.join(__dirname, "data.json");
+const COMMENTS_PATH = path.join(__dirname, "comments.json");
 const SECRET_KEY = "jwt_secret_key_2025";
 
 // Dummy user
@@ -36,6 +37,19 @@ function readMahasiswa() {
 // Helper untuk tulis data
 function writeMahasiswa(data) {
   fs.writeFileSync(DATA_PATH, JSON.stringify(data, null, 2));
+}
+
+function readComments() {
+  if (!fs.existsSync(COMMENTS_PATH)) return [];
+  const data = fs.readFileSync(COMMENTS_PATH, "utf-8");
+  try {
+    return JSON.parse(data);
+  } catch {
+    return [];
+  }
+}
+function writeComments(data) {
+  fs.writeFileSync(COMMENTS_PATH, JSON.stringify(data, null, 2));
 }
 
 // GET semua mahasiswa
@@ -116,7 +130,7 @@ app.delete("/mahasiswa/:id", (req, res) => {
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
-let comments = [];
+let comments = readComments();
 
 wss.on("connection", (ws) => {
   ws.send(JSON.stringify({ type: "init", comments }));
@@ -129,6 +143,7 @@ wss.on("connection", (ws) => {
           time: new Date().toISOString(),
         };
         comments.push(comment);
+        writeComments(comments);
         // Broadcast ke semua client
         wss.clients.forEach((client) => {
           if (client.readyState === WebSocket.OPEN) {
@@ -181,6 +196,19 @@ app.get("/protected/mahasiswa", verifyToken, (req, res) => {
 // Endpoint root agar tidak error 'Cannot GET /'
 app.get("/", (req, res) => {
   res.send("Aplikasi Backend Mahasiswa berjalan!");
+});
+
+// Endpoint hapus semua log
+app.delete("/logs", (req, res) => {
+  comments = [];
+  writeComments(comments);
+  // Broadcast ke semua client agar log dihapus
+  wss.clients.forEach((client) => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify({ type: "clear" }));
+    }
+  });
+  res.json({ success: true });
 });
 
 // Menjalankan server pada port yang ditentukan
