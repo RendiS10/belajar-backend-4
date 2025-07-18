@@ -1,0 +1,29 @@
+# Evaluasi & Catatan Keamanan Aplikasi
+
+1. **Penyimpanan Token**
+   - Token JWT sebaiknya disimpan di `httpOnly cookie` untuk keamanan maksimal, namun saat ini menggunakan localStorage (frontend, default).
+   - Hindari penyimpanan token di tempat yang mudah diakses JavaScript untuk mencegah serangan XSS.
+
+2. **Validasi Input Pengguna**
+   - Backend sudah memvalidasi input pada endpoint mahasiswa dan login.
+   - Disarankan menambah validasi lebih ketat (regex email, panjang password, dsb).
+
+3. **Proteksi Halaman & Endpoint**
+   - Endpoint terproteksi dengan middleware JWT.
+   - Pastikan frontend juga memproteksi halaman dengan pengecekan token sebelum akses.
+
+4. **Keamanan WebSocket**
+   - WebSocket saat ini belum terproteksi JWT, sehingga semua client bisa mengirim komentar/log.
+   - Disarankan menambah validasi token pada koneksi WebSocket.
+
+5. **Risiko Lain**
+   - Data mahasiswa disimpan di file JSON, pastikan file tidak bisa diakses publik.
+   - Jangan expose informasi sensitif di response API.
+
+6. **Saran Tambahan**
+   - Implementasi rate limiting pada endpoint login untuk mencegah brute force.
+   - Gunakan HTTPS di deployment.
+
+---
+
+Catatan ini dapat dikembangkan sesuai kebutuhan keamanan aplikasi Anda.

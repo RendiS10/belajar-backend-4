@@ -1,0 +1,14 @@
+[
+  {
+    "id": 1,
+    "nama": "Hilman Faturrahman",
+    "email": "hilmanfatu@example.com",
+    "jurusan": "Teknik Mesin"
+  },
+  {
+    "id": 2,
+    "nama": "Rendi Sutendi",
+    "email": "rendisutendi10@gmail.com",
+    "jurusan": "Teknik Informatika Sistem Informasi"
+  }
+]
