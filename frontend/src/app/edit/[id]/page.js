@@ -31,6 +31,17 @@ export default function Edit({ params }) {
     }
   }, [id]);
 
+  useEffect(() => {
+    const role =
+      typeof window !== "undefined" ? localStorage.getItem("role") : "";
+    const userEmail =
+      typeof window !== "undefined" ? localStorage.getItem("email") : "";
+    if (role === "mahasiswa" && email && email !== userEmail) {
+      setStatus("Akses ditolak: Anda hanya bisa edit data sendiri.");
+      setTimeout(() => router.push("/mahasiswa"), 1500);
+    }
+  }, [email]);
+
   const token =
     typeof window !== "undefined" ? localStorage.getItem("jwt_token") : "";
   let ws;

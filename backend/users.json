@@ -1,0 +1,14 @@
+[
+  {
+    "email": "dosen@email.com",
+    "password": "$2b$10$NepPuZ5SxIHkUQa7zD6WnuQC2DfpbWet/vcZIyHVCzePBCE3jesPi",
+    "name": "dosen",
+    "role": "dosen"
+  },
+  {
+    "email": "rendisutendi10@gmail.com",
+    "password": "$2b$10$1M7/v.wnqzFB1TUjin5leusfBIPEnRLRZkap9oGSzNu3d9j7R3cn6",
+    "name": "Rendi Sutendi",
+    "role": "mahasiswa"
+  }
+]

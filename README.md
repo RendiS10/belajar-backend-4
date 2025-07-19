@@ -1,172 +1,139 @@
-# 📚 Aplikasi Daftar Mahasiswa
+# Aplikasi Manajemen Mahasiswa
 
-Aplikasi web sederhana untuk mengelola data mahasiswa menggunakan Node.js (Express) sebagai backend dan Next.js sebagai frontend.
-
----
-
-## ✨ Fitur
-
-- Tampilkan daftar mahasiswa
-- Tambah mahasiswa baru
-- Edit data mahasiswa
-- Hapus mahasiswa
-- Notifikasi status aksi (berhasil/gagal)
-- Autentikasi login JWT
-- Komentar/log aktivitas real-time (WebSocket)
-- Proteksi halaman dengan JWT
-- Logout
-- Hapus log satu per satu dan semua log (permanen)
-- Tampilan Bootstrap + FontAwesome
-- Validasi input frontend & backend
-- Evaluasi keamanan (lihat security-notes.txt)
+Aplikasi ini adalah sistem manajemen data mahasiswa berbasis web yang terdiri dari **backend (Express.js)** dan **frontend (Next.js)**. Fitur utama meliputi autentikasi, otorisasi berbasis peran (role), proteksi halaman, log aktivitas, dan dummy login Google OAuth.
 
 ---
 
-## 📁 Struktur Folder
+## Fitur Utama
 
-```
-tugas26/
-├── backend/            # Server Express & data JSON
-│   ├── server.js       # Source utama backend
-│   ├── data.json       # Data mahasiswa (JSON)
-│   ├── comments.json   # Log/komentar aktivitas (JSON)
-│   ├── package.json    # Dependency backend
-│   └── security-notes.txt # Catatan keamanan
-├── frontend/           # Next.js frontend
-│   ├── src/app/        # Halaman utama (App Router)
-│   ├── public/         # Asset publik
-│   ├── package.json    # Dependency frontend
-└── README.md           # Dokumentasi
-```
+- **Login & Register**: Mahasiswa dan dosen dapat login/register. Password di-hash (bcrypt).
+- **Role-Based Access Control (RBAC)**:
+  - Mahasiswa hanya bisa melihat dan edit biodata sendiri.
+  - Dosen bisa melihat, tambah, edit, dan hapus semua data mahasiswa.
+- **Proteksi Halaman**: Semua halaman penting hanya bisa diakses setelah login dan sesuai role.
+- **Dummy Google OAuth**: Tersedia tombol login Google (simulasi/mockup).
+- **Log Aktivitas**: Komentar/log aktivitas via WebSocket.
 
 ---
 
-## 🚀 Cara Menjalankan Aplikasi
+## Cara Menjalankan Backend (Express.js)
 
-1. Jalankan backend:
-   ```bash
-   cd tugas26/backend
+1. Buka terminal dan masuk ke folder `backend`:
+   ```sh
+   cd backend
+   ```
+2. Install dependencies:
+   ```sh
    npm install
+   ```
+3. Jalankan server:
+   ```sh
    node server.js
    ```
-2. Jalankan frontend:
-   ```bash
-   cd tugas26/frontend
+4. Server berjalan di `http://localhost:3001`
+
+---
+
+## Cara Menjalankan Frontend (Next.js)
+
+1. Buka terminal dan masuk ke folder `frontend`:
+   ```sh
+   cd frontend
+   ```
+2. Install dependencies:
+   ```sh
    npm install
+   ```
+3. Jalankan aplikasi:
+   ```sh
    npm run dev
    ```
-3. Buka browser dan akses `http://localhost:3000`
+4. Frontend berjalan di `http://localhost:3000`
 
 ---
 
-## 🔗 Cara Menggunakan API
+## Cara Login & Role
 
-- **GET** `/mahasiswa` — Ambil daftar mahasiswa
-- **GET** `/mahasiswa/:id` — Ambil detail mahasiswa
-- **POST** `/mahasiswa` — Tambah mahasiswa baru
-- **PUT** `/mahasiswa/:id` — Edit data mahasiswa
-- **DELETE** `/mahasiswa/:id` — Hapus mahasiswa
-- **POST** `/login` — Login JWT
-- **GET** `/protected/mahasiswa` — Daftar mahasiswa (proteksi JWT)
-- **DELETE** `/logs` — Hapus semua log/komentar (permanen)
+- **Mahasiswa**: Login dengan email dan password yang terdaftar.
+- **Dosen**: Login dengan email dan password dosen, atau gunakan tombol "Login dengan Google (Mockup)" untuk simulasi login dosen.
 
 ---
 
-## 🔗 Cara Menggunakan API dengan Postman
+## Penggunaan Aplikasi
 
-1. Pastikan backend sudah berjalan di `http://localhost:3001`.
-2. Buka aplikasi Postman.
-3. Berikut contoh request yang bisa dicoba:
+1. **Login/Register** di halaman `/login`.
+2. Setelah login:
+   - Mahasiswa hanya bisa melihat dan edit biodata sendiri di `/mahasiswa`.
+   - Dosen bisa melihat, tambah, edit, dan hapus semua data mahasiswa di `/dosen`.
+3. Logout dengan tombol di pojok kanan atas.
+4. Semua aksi penting akan tercatat di log (komentar realtime).
 
-### Ambil daftar mahasiswa
+---
 
-- **GET** `http://localhost:3001/mahasiswa`
+## Penggunaan Backend dengan Postman
 
-### Ambil detail mahasiswa
+### Register User
 
-- **GET** `http://localhost:3001/mahasiswa/1`
-
-### Tambah mahasiswa
-
-- **POST** `http://localhost:3001/mahasiswa`
-- Body (JSON):
+- **Method:** `POST`
+- **URL:** `http://localhost:3001/register`
+- **Body (JSON):**
   ```json
   {
-    "nama": "Nama Baru",
-    "email": "emailbaru@example.com",
-    "jurusan": "Jurusan Baru"
+    "email": "user@email.com",
+    "password": "password123",
+    "name": "Nama User",
+    "role": "mahasiswa" // atau "dosen"
   }
   ```
+- **Response:** Pesan sukses jika berhasil.
 
-### Edit mahasiswa
+### Login User
 
-- **PUT** `http://localhost:3001/mahasiswa/1`
-- Body (JSON):
+- **Method:** `POST`
+- **URL:** `http://localhost:3001/login`
+- **Body (JSON):**
   ```json
   {
-    "nama": "Nama Edit",
-    "email": "emailedit@example.com",
-    "jurusan": "Jurusan Edit"
+    "email": "user@email.com",
+    "password": "password123"
   }
   ```
+- **Response:** Token JWT, role, dan nama.
 
-### Hapus mahasiswa
+### Akses Data Mahasiswa
 
-- **DELETE** `http://localhost:3001/mahasiswa/1`
+- **GET `/mahasiswa`**
+  - **Header:** `Authorization: Bearer <token JWT dari login>`
+  - Jika login sebagai dosen: dapat melihat semua data mahasiswa.
+  - Jika login sebagai mahasiswa: hanya dapat melihat data sendiri.
+- **POST `/mahasiswa`**
+  - Hanya dosen yang bisa menambah data mahasiswa.
+- **PUT `/mahasiswa/:id`**
+  - Mahasiswa hanya bisa edit data sendiri, dosen bisa edit semua.
+- **DELETE `/mahasiswa/:id`**
+  - Hanya dosen yang bisa menghapus data mahasiswa.
 
-### Login JWT
+### Endpoint Dosen
 
-- **POST** `http://localhost:3001/login`
-- Body (JSON):
-  ```json
-  {
-    "email": "rendisutendi10@gmail.com",
-    "password": "rendi123"
-  }
-  ```
-- Response: token JWT
+- **GET `/dosen/mahasiswa`**: Daftar semua mahasiswa (khusus dosen).
+- **POST `/dosen/mahasiswa`**: Tambah mahasiswa (khusus dosen).
+- **PUT `/dosen/mahasiswa/:id`**: Edit mahasiswa (khusus dosen).
+- **DELETE `/dosen/mahasiswa/:id`**: Hapus mahasiswa (khusus dosen).
 
-### Akses endpoint terproteksi
+### Reset Log Aktivitas
 
-- **GET** `http://localhost:3001/protected/mahasiswa`
-- Header: `Authorization: Bearer <token JWT dari login>`
-
-### Hapus semua log/komentar
-
-- **DELETE** `http://localhost:3001/logs`
-
----
-
-## 📝 Catatan
-
-- Data mahasiswa disimpan di file `backend/data.json`.
-- Komentar/log real-time menggunakan WebSocket (port backend).
-- Token JWT dikirim melalui header Authorization saat akses endpoint terproteksi.
-- Untuk pengembangan, gunakan terminal terpisah untuk backend dan frontend.
-- Fitur hapus log satu per satu dan semua log sudah sinkron dengan backend.
-- Evaluasi keamanan ada di `backend/security-notes.txt`.
+- **Method:** `DELETE`
+- **URL:** `http://localhost:3001/logs`
 
 ---
 
-## 📦 Dependencies
+## Penting
 
-- express
-- cors
-- ws
-- jsonwebtoken
-- next
-- bootstrap
-- @fortawesome/fontawesome-free
+- Selalu gunakan token JWT pada header Authorization untuk endpoint yang diproteksi.
+- Data user tersimpan di `backend/users.json`.
+- Data mahasiswa tersimpan di `backend/data.json`.
+- Untuk reset log, gunakan endpoint DELETE `/logs` di backend.
 
 ---
 
-## 👨‍💻 Kontributor
-
-- Rendi Sutendi
-- Hilman Fatu
-
----
-
-## 🏷️ Lisensi
-
-MIT
+Jika ada kendala atau pertanyaan, silakan hubungi pengembang.

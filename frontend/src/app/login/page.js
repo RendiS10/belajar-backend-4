@@ -26,7 +26,14 @@ export default function LoginPage() {
       const data = await res.json();
       if (res.ok && data.token) {
         localStorage.setItem("jwt_token", data.token);
-        router.push("/mahasiswa");
+        localStorage.setItem("role", data.role);
+        localStorage.setItem("name", data.name);
+        localStorage.setItem("email", email);
+        if (data.role === "dosen") {
+          router.push("/dosen");
+        } else {
+          router.push("/mahasiswa");
+        }
       } else {
         setError(data.error || "Login gagal");
       }
@@ -86,6 +93,20 @@ export default function LoginPage() {
             className="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2"
           >
             <FontAwesomeIcon icon={faSignInAlt} /> Login
+          </button>
+          <button
+            type="button"
+            className="btn btn-danger w-100 mt-2"
+            onClick={() => {
+              // Simulasi login Google: role dosen
+              localStorage.setItem("jwt_token", "dummy_google_token");
+              localStorage.setItem("role", "dosen");
+              localStorage.setItem("name", "Google Dosen");
+              localStorage.setItem("email", "google.dosen@dummy.com");
+              router.push("/dosen");
+            }}
+          >
+            Login dengan Google (Mockup)
           </button>
           {error && <div className="alert alert-danger mt-3">{error}</div>}
         </form>

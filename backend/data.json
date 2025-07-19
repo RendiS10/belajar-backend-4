@@ -1,14 +1,14 @@
 [
   {
-    "id": 1,
-    "nama": "Hilman Faturrahman",
-    "email": "hilmanfatu@example.com",
-    "jurusan": "Teknik Pesawat"
-  },
-  {
     "id": 2,
     "nama": "Rendi Sutendi",
     "email": "rendisutendi10@gmail.com",
-    "jurusan": "Teknik Informatika Sistem Informasi"
+    "jurusan": "Teknik Informatika"
+  },
+  {
+    "id": 3,
+    "nama": "Dewi Lestari",
+    "email": "dewi@gmail.com",
+    "jurusan": "Sistem Informasi"
   }
 ]

@@ -23,6 +23,19 @@ export default function Tambah() {
     }
   }
 
+  // Proteksi akses hanya untuk dosen
+  if (typeof window !== "undefined") {
+    const role = localStorage.getItem("role");
+    if (role !== "dosen") {
+      setTimeout(() => router.push("/mahasiswa"), 1000);
+      return (
+        <div className="container mt-4">
+          <div className="alert alert-danger">Akses hanya untuk dosen!</div>
+        </div>
+      );
+    }
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setStatus("");
