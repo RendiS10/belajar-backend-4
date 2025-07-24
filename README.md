@@ -170,10 +170,100 @@ Aplikasi ini adalah sistem manajemen data mahasiswa berbasis web yang terdiri da
 
 ### 5. Monitoring & Keamanan
 
-- Praktik keamanan seperti validasi input, proteksi endpoint, dan penggunaan JWT sudah diterapkan.
+- Praktik keamanan yang diterapkan:
+  - **Security headers**: Backend menggunakan helmet, X-Frame-Options, dan X-Content-Type-Options untuk mencegah clickjacking dan sniffing.
+  - **Validasi input/output**: Semua input penting (register, tambah/edit mahasiswa) divalidasi dan disanitasi untuk mencegah XSS.
+  - **Proteksi endpoint**: Semua endpoint penting diproteksi JWT dan RBAC.
 - Catatan dan evaluasi keamanan dapat dilihat di `backend/security-notes.txt`.
-- Monitoring performa dan keamanan dapat ditambahkan sesuai kebutuhan (misal: Prometheus/Grafana, rate limiting, dsb).
+- Monitoring performa dan keamanan dapat dilakukan dengan PM2, Prometheus/Grafana, dsb. (lihat bagian Monitoring Sederhana di bawah).
 
 ---
 
-Jika ada kendala atau pertanyaan, silakan hubungi pengembang.
+### Monitoring Sederhana
+
+Aplikasi dapat dipantau performanya menggunakan tool ringan seperti **PM2** atau integrasi Prometheus+Grafana.
+
+**Contoh Monitoring dengan PM2:**
+
+1. Install PM2: `npm install -g pm2`
+2. Jalankan backend: `pm2 start server.js --name backend-mahasiswa`
+3. Pantau performa: `pm2 monit` (lihat CPU, memori, request)
+4. (Opsional) Lihat log: `pm2 logs backend-mahasiswa`
+
+**Alternatif Prometheus+Grafana:**
+
+- Integrasi dengan prom-client di backend untuk expose /metrics
+- Tambahkan endpoint ke Prometheus, visualisasi di Grafana
+
+Lampirkan screenshot dashboard monitoring di folder docs jika diperlukan.
+
+---
+
+## Dokumentasi Praktik Logging, Monitoring, dan Keamanan
+
+### Ringkasan Logging
+
+- Semua aktivitas penting (login, edit, hapus, error) dicatat menggunakan Winston ke file `backend/app.log` dan console.
+- Contoh log:
+
+  ```log
+  2025-07-24T07:27:06.098Z [INFO] Edit data mahasiswa oleh dosen: dosen@email.com (id: 4)
+  2025-07-24T07:29:47.459Z [INFO] Hapus data mahasiswa oleh dosen: dosen@email.com (id: 4, nama: Hilman)
+  ```
+
+- Logging dilakukan pada endpoint login, edit, hapus, dan akses data mahasiswa.
+- Fitur komentar/log real-time juga tersedia di frontend (WebSocket) untuk aktivitas pengguna.
+
+### Ringkasan Monitoring
+
+- Monitoring performa backend dilakukan menggunakan **PM2** (atau bisa juga Prometheus+Grafana).
+- Metrik yang dipantau: CPU usage, memory usage, dan request count.
+- Jalankan `pm2 monit` untuk dashboard monitoring secara real-time.
+- (Opsional) Lampirkan screenshot dashboard monitoring di folder `docs/`.
+
+### Langkah-langkah Pengamanan & Potongan Kode
+
+- **Security headers**: Menggunakan helmet, X-Frame-Options, dan X-Content-Type-Options.
+
+  ```js
+  const helmet = require("helmet");
+  app.use(helmet({ contentSecurityPolicy: false }));
+  app.use((req, res, next) => {
+    res.setHeader("X-Frame-Options", "DENY");
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    next();
+  });
+  ```
+
+- **Validasi input/output**: Semua input penting disanitasi untuk mencegah XSS.
+
+  ```js
+  function sanitizeInput(str) {
+    if (typeof str !== "string") return str;
+    return str.replace(/[<>]/g, "");
+  }
+  // Penggunaan pada endpoint register, tambah/edit mahasiswa
+  nama = sanitizeInput(nama);
+  email = sanitizeInput(email);
+  jurusan = sanitizeInput(jurusan);
+  ```
+
+- **Proteksi endpoint**: Semua endpoint penting diproteksi JWT dan RBAC.
+
+  ```js
+  function verifyToken(req, res, next) {
+    // ...
+  }
+  function authorizeRole(roles) {
+    // ...
+  }
+  ```
+
+- **Catatan keamanan**: Lihat file `backend/security-notes.txt` untuk evaluasi dan saran keamanan lebih lanjut.
+
+### Tantangan & Pembelajaran
+
+- **Tantangan**: Integrasi proteksi role di backend dan frontend agar benar-benar aman, serta memastikan logging tidak mengganggu performa aplikasi.
+- **Pembelajaran**: Pentingnya validasi input, penggunaan security headers, dan logging aktivitas untuk audit dan troubleshooting. Monitoring performa sangat membantu mendeteksi bottleneck dan masalah aplikasi secara real-time.
+
+---

@@ -7,11 +7,22 @@ const WebSocket = require("ws");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const winston = require("winston");
+const helmet = require("helmet");
 const app = express();
 const PORT = 3001;
 
 app.use(cors());
 app.use(express.json());
+app.use(
+  helmet({
+    contentSecurityPolicy: false, // Nonaktifkan CSP default, bisa diatur manual jika perlu
+  })
+);
+app.use((req, res, next) => {
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  next();
+});
 
 const DATA_PATH = path.join(__dirname, "data.json");
 const COMMENTS_PATH = path.join(__dirname, "comments.json");
@@ -106,8 +117,11 @@ app.get("/mahasiswa/:id", (req, res) => {
 // POST tambah mahasiswa: hanya dosen
 app.post("/mahasiswa", verifyToken, authorizeRole(["dosen"]), (req, res) => {
   try {
+    let { nama, email, jurusan } = req.body;
+    nama = sanitizeInput(nama);
+    email = sanitizeInput(email);
+    jurusan = sanitizeInput(jurusan);
     const mahasiswa = readMahasiswa();
-    const { nama, email, jurusan } = req.body;
     if (!nama || !email || !jurusan)
       return res.status(400).json({ error: "Data tidak lengkap" });
     const id = mahasiswa.length ? mahasiswa[mahasiswa.length - 1].id + 1 : 1;
@@ -123,6 +137,10 @@ app.post("/mahasiswa", verifyToken, authorizeRole(["dosen"]), (req, res) => {
 // PUT edit mahasiswa: mahasiswa hanya bisa edit data sendiri, dosen bisa edit semua
 app.put("/mahasiswa/:id", verifyToken, (req, res) => {
   try {
+    let { nama, email, jurusan } = req.body;
+    nama = sanitizeInput(nama);
+    email = sanitizeInput(email);
+    jurusan = sanitizeInput(jurusan);
     const mahasiswa = readMahasiswa();
     const idx = mahasiswa.findIndex((m) => m.id === parseInt(req.params.id));
     if (idx === -1)
@@ -134,7 +152,6 @@ app.put("/mahasiswa/:id", verifyToken, (req, res) => {
     ) {
       return res.status(403).json({ error: "Akses ditolak" });
     }
-    const { nama, email, jurusan } = req.body;
     if (!nama || !email || !jurusan)
       return res.status(400).json({ error: "Data tidak lengkap" });
     mahasiswa[idx] = { id: mahasiswa[idx].id, nama, email, jurusan };
@@ -204,12 +221,21 @@ app.post("/register", async (req, res) => {
   if (!email || !password || !name || !role) {
     return res.status(400).json({ error: "Data tidak lengkap" });
   }
+  // Validasi XSS
+  const safeEmail = sanitizeInput(email);
+  const safeName = sanitizeInput(name);
+  const safeRole = sanitizeInput(role);
   const users = readUsers();
-  if (users.find((u) => u.email === email)) {
+  if (users.find((u) => u.email === safeEmail)) {
     return res.status(409).json({ error: "Email sudah terdaftar" });
   }
   const hashed = await bcrypt.hash(password, 10);
-  users.push({ email, password: hashed, name, role });
+  users.push({
+    email: safeEmail,
+    password: hashed,
+    name: safeName,
+    role: safeRole,
+  });
   writeUsers(users);
   res.json({ message: "Register sukses" });
 });
@@ -311,7 +337,10 @@ app.post(
   (req, res) => {
     try {
       const mahasiswa = readMahasiswa();
-      const { nama, email, jurusan } = req.body;
+      let { nama, email, jurusan } = req.body;
+      nama = sanitizeInput(nama);
+      email = sanitizeInput(email);
+      jurusan = sanitizeInput(jurusan);
       if (!nama || !email || !jurusan)
         return res.status(400).json({ error: "Data tidak lengkap" });
       const id = mahasiswa.length ? mahasiswa[mahasiswa.length - 1].id + 1 : 1;
@@ -336,7 +365,10 @@ app.put(
       const idx = mahasiswa.findIndex((m) => m.id === parseInt(req.params.id));
       if (idx === -1)
         return res.status(404).json({ error: "Mahasiswa tidak ditemukan" });
-      const { nama, email, jurusan } = req.body;
+      let { nama, email, jurusan } = req.body;
+      nama = sanitizeInput(nama);
+      email = sanitizeInput(email);
+      jurusan = sanitizeInput(jurusan);
       if (!nama || !email || !jurusan)
         return res.status(400).json({ error: "Data tidak lengkap" });
       mahasiswa[idx] = { id: mahasiswa[idx].id, nama, email, jurusan };
