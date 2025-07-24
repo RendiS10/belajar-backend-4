@@ -91,6 +91,12 @@ function writeUsers(data) {
   fs.writeFileSync(USERS_PATH, JSON.stringify(data, null, 2));
 }
 
+// Helper sederhana untuk sanitasi input (menghindari XSS dan karakter aneh)
+function sanitizeInput(str) {
+  if (typeof str !== "string") return str;
+  return str.replace(/[<>"'`]/g, "");
+}
+
 // GET semua mahasiswa
 app.get("/mahasiswa", (req, res) => {
   try {

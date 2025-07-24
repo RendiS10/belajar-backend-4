@@ -1,7 +1,7 @@
 [
   {
     "id": 2,
-    "nama": "Rendi Sutendi",
+    "nama": "Rendi Update",
     "email": "rendisutendi10@gmail.com",
     "jurusan": "Teknik Informatika"
   },
@@ -10,5 +10,17 @@
     "nama": "Dewi Lestari",
     "email": "dewi@gmail.com",
     "jurusan": "Sistem Informasi"
+  },
+  {
+    "id": 4,
+    "nama": "Test Mahasiswa",
+    "email": "testmhs@email.com",
+    "jurusan": "Teknik Mesin"
+  },
+  {
+    "id": 5,
+    "nama": "Test Mahasiswa",
+    "email": "testmhs@email.com",
+    "jurusan": "Teknik Mesin"
   }
 ]
