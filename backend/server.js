@@ -6,6 +6,7 @@ const http = require("http");
 const WebSocket = require("ws");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+const winston = require("winston");
 const app = express();
 const PORT = 3001;
 
@@ -16,6 +17,22 @@ const DATA_PATH = path.join(__dirname, "data.json");
 const COMMENTS_PATH = path.join(__dirname, "comments.json");
 const USERS_PATH = path.join(__dirname, "users.json");
 const SECRET_KEY = "jwt_secret_key_2025";
+
+// Logger konfigurasi
+const logger = winston.createLogger({
+  level: "info",
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.printf(
+      ({ timestamp, level, message }) =>
+        `${timestamp} [${level.toUpperCase()}] ${message}`
+    )
+  ),
+  transports: [
+    new winston.transports.File({ filename: "app.log" }),
+    new winston.transports.Console(),
+  ],
+});
 
 // Dummy user
 const DUMMY_USER = [
@@ -122,6 +139,9 @@ app.put("/mahasiswa/:id", verifyToken, (req, res) => {
       return res.status(400).json({ error: "Data tidak lengkap" });
     mahasiswa[idx] = { id: mahasiswa[idx].id, nama, email, jurusan };
     writeMahasiswa(mahasiswa);
+    logger.info(
+      `Edit data mahasiswa oleh ${req.user.role}: ${req.user.email} (id: ${req.params.id})`
+    );
     res.json(mahasiswa[idx]);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -199,14 +219,21 @@ app.post("/login", async (req, res) => {
   const { email, password } = req.body;
   const users = readUsers();
   const user = users.find((u) => u.email === email);
-  if (!user) return res.status(401).json({ error: "User tidak ditemukan" });
+  if (!user) {
+    logger.warn(`Login gagal untuk email: ${email} (user tidak ditemukan)`);
+    return res.status(401).json({ error: "User tidak ditemukan" });
+  }
   const valid = await bcrypt.compare(password, user.password);
-  if (!valid) return res.status(401).json({ error: "Password salah" });
+  if (!valid) {
+    logger.warn(`Login gagal untuk email: ${email} (password salah)`);
+    return res.status(401).json({ error: "Password salah" });
+  }
   const token = jwt.sign(
     { email: user.email, name: user.name, role: user.role },
     SECRET_KEY,
     { expiresIn: "2h" }
   );
+  logger.info(`Login sukses untuk email: ${email} (role: ${user.role})`);
   res.json({ token, role: user.role, name: user.name });
 });
 
@@ -314,6 +341,9 @@ app.put(
         return res.status(400).json({ error: "Data tidak lengkap" });
       mahasiswa[idx] = { id: mahasiswa[idx].id, nama, email, jurusan };
       writeMahasiswa(mahasiswa);
+      logger.info(
+        `Edit data mahasiswa oleh dosen: ${req.user.email} (id: ${req.params.id})`
+      );
       res.json(mahasiswa[idx]);
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -335,7 +365,28 @@ app.delete(
       const deleted = mahasiswa[idx];
       mahasiswa.splice(idx, 1);
       writeMahasiswa(mahasiswa);
+      logger.info(
+        `Hapus data mahasiswa oleh dosen: ${req.user.email} (id: ${req.params.id}, nama: ${deleted.nama})`
+      );
       res.json(deleted);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  }
+);
+
+// Endpoint dosen: detail mahasiswa
+app.get(
+  "/dosen/mahasiswa/:id",
+  verifyToken,
+  authorizeRole(["dosen"]),
+  (req, res) => {
+    try {
+      const mahasiswa = readMahasiswa();
+      const mhs = mahasiswa.find((m) => m.id === parseInt(req.params.id));
+      if (!mhs)
+        return res.status(404).json({ error: "Mahasiswa tidak ditemukan" });
+      res.json(mhs);
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
@@ -358,6 +409,31 @@ app.delete("/logs", (req, res) => {
     }
   });
   res.json({ success: true });
+});
+
+// Contoh logging akses data mahasiswa dan error
+app.get("/mahasiswa", verifyToken, (req, res) => {
+  try {
+    const mahasiswa = readMahasiswa();
+    if (req.user.role === "dosen") {
+      logger.info(`Akses daftar mahasiswa oleh dosen: ${req.user.email}`);
+      res.json(mahasiswa);
+    } else if (req.user.role === "mahasiswa") {
+      logger.info(`Akses biodata sendiri oleh mahasiswa: ${req.user.email}`);
+      const mhs = mahasiswa.filter((m) => m.email === req.user.email);
+      res.json(mhs);
+    } else {
+      logger.warn(`Akses GET /mahasiswa ditolak untuk: ${req.user.email}`);
+      res.status(403).json({ error: "Akses ditolak" });
+    }
+  } catch (err) {
+    logger.error(
+      `Error akses /mahasiswa oleh ${req.user?.email || "unknown"}: ${
+        err.message
+      }`
+    );
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Menjalankan server pada port yang ditentukan

@@ -136,9 +136,6 @@ export default function Edit({ params }) {
         <button type="submit" className="btn btn-primary">
           <FontAwesomeIcon icon={faSave} /> Simpan
         </button>
-        <Link href="/mahasiswa" className="btn btn-secondary mt-3">
-          Kembali
-        </Link>
       </form>
     </div>
   );

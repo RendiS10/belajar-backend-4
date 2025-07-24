@@ -12,7 +12,13 @@ Aplikasi ini adalah sistem manajemen data mahasiswa berbasis web yang terdiri da
   - Dosen bisa melihat, tambah, edit, dan hapus semua data mahasiswa.
 - **Proteksi Halaman**: Semua halaman penting hanya bisa diakses setelah login dan sesuai role.
 - **Dummy Google OAuth**: Tersedia tombol login Google (simulasi/mockup).
-- **Log Aktivitas**: Komentar/log aktivitas via WebSocket.
+- **Log Aktivitas**: Komentar/log aktivitas via WebSocket dan logging ke file (Winston).
+- **Edit & Hapus Data**: Dosen dapat mengedit dan menghapus data mahasiswa, mahasiswa hanya bisa edit data sendiri.
+- **Log Aksi CRUD**: Semua aksi penting (login, edit, hapus, error) dicatat ke file log backend (`app.log`).
+- **Monitoring & Keamanan**: Validasi input, proteksi endpoint, JWT, dan catatan keamanan tersedia.
+- **Frontend Modern**: Tampilan Next.js terpisah untuk mahasiswa dan dosen, proteksi role di sisi frontend.
+- **Komentar/Log Real-Time**: Fitur komentar/log aktivitas berbasis WebSocket di frontend.
+- **Reset Log**: Log aktivitas dapat dihapus oleh dosen melalui endpoint khusus.
 
 ---
 
@@ -133,6 +139,40 @@ Aplikasi ini adalah sistem manajemen data mahasiswa berbasis web yang terdiri da
 - Data user tersimpan di `backend/users.json`.
 - Data mahasiswa tersimpan di `backend/data.json`.
 - Untuk reset log, gunakan endpoint DELETE `/logs` di backend.
+
+---
+
+## Penjelasan Penggunaan Fitur
+
+### 1. Login & Register
+
+- Pengguna (mahasiswa/dosen) dapat mendaftar dan login menggunakan email dan password.
+- Password disimpan secara aman menggunakan hash (bcrypt).
+- Setelah login, pengguna mendapatkan token JWT yang digunakan untuk mengakses endpoint yang diproteksi.
+
+### 2. Role-Based Access Control (RBAC)
+
+- Setiap user memiliki role: `mahasiswa` atau `dosen`.
+- Mahasiswa hanya dapat melihat dan mengedit biodata sendiri.
+- Dosen dapat melihat, menambah, mengedit, dan menghapus semua data mahasiswa.
+- Proteksi dilakukan di backend (middleware JWT & RBAC) dan frontend (navigasi & tampilan sesuai role).
+
+### 3. Proteksi Halaman & Endpoint
+
+- Semua endpoint penting di backend hanya bisa diakses jika sudah login (memiliki JWT valid).
+- Frontend juga memproteksi halaman: user yang tidak sesuai role akan diarahkan ke halaman login atau halaman sesuai role.
+
+### 4. Logging Aktivitas
+
+- Aktivitas penting seperti login, akses data, dan error dicatat menggunakan Winston (log ke file `app.log` dan console).
+- Terdapat fitur komentar/log real-time di frontend (WebSocket) untuk melihat aktivitas secara langsung.
+- Log dapat dihapus melalui endpoint khusus (`DELETE /logs`).
+
+### 5. Monitoring & Keamanan
+
+- Praktik keamanan seperti validasi input, proteksi endpoint, dan penggunaan JWT sudah diterapkan.
+- Catatan dan evaluasi keamanan dapat dilihat di `backend/security-notes.txt`.
+- Monitoring performa dan keamanan dapat ditambahkan sesuai kebutuhan (misal: Prometheus/Grafana, rate limiting, dsb).
 
 ---
 
